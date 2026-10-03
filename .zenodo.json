@@ -1,0 +1,21 @@
+{
+  "title": "Analysis code: mitochondrial L2 haplogroup and HIV disease progression in Ugandan children",
+  "description": "R code reproducing the tables, figures and statistical analyses of a study of mitochondrial haplogroups and time to HIV disease progression in a pediatric cohort from Uganda and Botswana (CAfGEN). Participant-level data are not included; see the repository README for data availability.",
+  "creators": [
+    {
+      "name": "Mwesigwa, Savannah",
+      "affiliation": "College of Health Sciences, Makerere University, Kampala, Uganda",
+      "orcid": "0000-0001-5466-2315"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "keywords": [
+    "mitochondrial haplogroup",
+    "HIV disease progression",
+    "pediatric HIV",
+    "survival analysis",
+    "Uganda",
+    "Botswana"
+  ]
+}

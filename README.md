@@ -67,6 +67,10 @@ Participant-level data are not included in this repository.
 Sequencing data: European Genome-phenome Archive (EGA), accession [EGAS...].
 Clinical data: available from the CAfGEN consortium on request, subject to ethics approval.
 
+## Citation
+
+If you use this code, please cite the archived release (see `CITATION.cff`).
+
 ## License
 
-MIT
+MIT (see `LICENSE`)
