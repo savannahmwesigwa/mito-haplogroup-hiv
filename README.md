@@ -10,6 +10,7 @@ R/00_setup.R                  packages, paths, data import, derived variables, h
 R/01_manuscript_analysis.R    manuscript tables, figures, statistics; manuscript vs re-run check table
 R/02_revision_analyses.R      additional analyses for revision
 R/03_tables.R                 Tables 1-2 and Supplementary Tables S1-S7 as Word files
+R/04_haplogroup_concordance.R Agreement between Haplogrep 3 and MToolBox
 data/                         input data (not included, see Data availability)
 output/                       figures and results (created on run)
 ```
@@ -59,6 +60,7 @@ From the project root:
 Rscript R/01_manuscript_analysis.R > output/01_results.txt 2>&1
 Rscript R/02_revision_analyses.R   > output/02_results.txt 2>&1
 Rscript R/03_tables.R              > output/03_results.txt 2>&1
+Rscript R/04_haplogroup_concordance.R > output/04_results.txt 2>&1
 ```
 
 ## Data availability

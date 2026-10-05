@@ -170,7 +170,7 @@ make_km <- function(df, group_var, labels, xlab, file = NULL,
   p <- ggsurvplot(
     fit, data = df,
     size = 0.3, conf.int = TRUE, conf.int.alpha = 0.3,
-    censor.shape = ".", censor.size = 2,
+    censor.shape = "|", censor.size = 2,
     palette = palette, break.time.by = break_by,
     pval = TRUE, pval.size = pval_size, surv.median.line = "hv",
     risk.table = TRUE, risk.table.col = "strata", risk.table.height = 0.4,

@@ -287,8 +287,108 @@ s7 <- bind_rows(
 supp$S7 <- list(
   data = s7,
   caption = paste0("Supplementary Table 7. Sensitivity analyses of the L2 association with ",
-                   "time to progression among Ugandan rapid progressors."),
+                   "time to progression among Ugandan rapid progressors, by birth period ",
+                   "and birth-year restriction."),
   foot = "Cox proportional hazards models adjusted for sex. Reference: non-L2.",
+  labels = NULL
+)
+
+# S8: handling of incomplete clinical records
+sens_row <- function(df, lab, hand) {
+  df <- filter(df, !is.na(time))
+  m <- coxph(Surv(time, event) ~ L2 + Sex, data = df)
+  su <- summary(m)
+  data.frame(Group = lab, Handling = hand, N = m$n, Events = m$nevent,
+             `L2 HR (95% CI)` = sprintf("%.3f (%.3f-%.3f)",
+                                        su$conf.int["L2L2", "exp(coef)"],
+                                        su$conf.int["L2L2", "lower .95"],
+                                        su$conf.int["L2L2", "upper .95"]),
+             `p-value` = sprintf("%.3f", su$coefficients["L2L2", "Pr(>|z|)"]),
+             check.names = FALSE)
+}
+s8 <- bind_rows(
+  sens_row(filter(ugr_ltnp, event == 1), "Uganda LTNP", "Records dropped (as submitted)"),
+  sens_row(ugr_ltnp, "Uganda LTNP", "Four LTNPs censored (primary)"),
+  sens_row(filter(bwr_ltnp, event == 1), "Botswana LTNP", "Records dropped (as submitted)"),
+  sens_row(bwr_ltnp, "Botswana LTNP", "Four LTNPs censored (primary)"),
+  sens_row(ugr_rp, "Uganda RP", "Records dropped (as submitted)"),
+  sens_row(ugr_rp, "Uganda RP", "Four LTNPs censored (primary)")
+)
+supp$S8 <- list(
+  data = s8,
+  caption = paste0("Supplementary Table 8. Handling of six participants with ",
+                   "incomplete clinical records: effect on the L2 association."),
+  foot = paste0("Cox models adjusted for sex. Four LTNPs with no record of therapy ",
+                "initiation were right-censored at age at enrolment in the primary ",
+                "analysis. Two records that could not be interpreted were excluded ",
+                "from time-to-event analyses throughout."),
+  labels = NULL
+)
+
+# S9: L2b leave-one-out
+l2_rp_sub <- ugr_rp %>%
+  filter(L2 == "L2") %>%
+  mutate(L2b = factor(if_else(Subclade == "L2b", "L2b", "Non L2b"),
+                      levels = c("L2b", "Non L2b")),
+         Subclade = factor(Subclade))
+loo_row <- function(df, lab) {
+  sd <- survdiff(Surv(time, event) ~ L2b, data = df)
+  m  <- coxph(Surv(time, event) ~ Subclade + Sex, data = df)
+  su <- summary(m)
+  data.frame(`Participant removed` = lab,
+             `L2b n` = sum(df$L2b == "L2b"),
+             `Log-rank p` = sprintf("%.3f", 1 - pchisq(sd$chisq, 1)),
+             `L2b HR (95% CI)` = sprintf("%.3f (%.3f-%.3f)",
+                                         su$conf.int["SubcladeL2b", "exp(coef)"],
+                                         su$conf.int["SubcladeL2b", "lower .95"],
+                                         su$conf.int["SubcladeL2b", "upper .95"]),
+             `p-value` = sprintf("%.3f", su$coefficients["SubcladeL2b", "Pr(>|z|)"]),
+             check.names = FALSE)
+}
+l2b_ids <- filter(l2_rp_sub, L2b == "L2b")$sample_name
+s9 <- bind_rows(
+  loo_row(l2_rp_sub, "None (all six)"),
+  bind_rows(lapply(seq_along(l2b_ids), function(i)
+    loo_row(filter(l2_rp_sub, sample_name != l2b_ids[i]),
+            paste0("L2b participant ", i))))
+)
+supp$S9 <- list(
+  data = s9,
+  caption = paste0("Supplementary Table 9. Leave-one-out analysis of the L2b ",
+                   "subclade association among Ugandan rapid progressors."),
+  foot = paste0("Cox models adjusted for sex, reference L2a. Participant ",
+                "identifiers are not shown. The association is not robust to the ",
+                "removal of any single individual."),
+  labels = NULL
+)
+
+# S10: FDR across the six haplogroup-survival comparisons
+lr_p <- function(df, g) {
+  sd <- survdiff(as.formula(paste("Surv(time, event) ~", g)), data = df)
+  1 - pchisq(sd$chisq, length(sd$n) - 1)
+}
+l2_ltnp_sub <- ugr_ltnp %>%
+  filter(L2 == "L2") %>%
+  mutate(L2b = if_else(Subclade == "L2b", "L2b", "Non L2b"))
+s10 <- data.frame(
+  Comparison = c("Uganda RP: L2 vs non-L2", "Uganda LTNP: L2 vs non-L2",
+                 "Botswana RP: L2 vs non-L2", "Botswana LTNP: L2 vs non-L2",
+                 "Uganda RP: L2b vs other L2", "Uganda LTNP: L2b vs other L2"),
+  p_raw = c(lr_p(ugr_rp, "L2"), lr_p(ugr_ltnp, "L2"),
+            lr_p(bwr_rp, "L2"), lr_p(bwr_ltnp, "L2"),
+            lr_p(l2_rp_sub, "L2b"), lr_p(l2_ltnp_sub, "L2b")),
+  check.names = FALSE
+)
+s10$`p (Benjamini-Hochberg)` <- p.adjust(s10$p_raw, "BH")
+s10$p_raw <- sprintf("%.3f", s10$p_raw)
+s10$`p (Benjamini-Hochberg)` <- sprintf("%.3f", as.numeric(s10$`p (Benjamini-Hochberg)`))
+names(s10)[2] <- "p (unadjusted)"
+supp$S10 <- list(
+  data = s10,
+  caption = paste0("Supplementary Table 10. Log-rank comparisons of time to ",
+                   "progression by haplogroup, with and without adjustment for ",
+                   "multiple comparisons."),
+  foot = "Benjamini-Hochberg adjustment applied across the six comparisons shown.",
   labels = NULL
 )
 

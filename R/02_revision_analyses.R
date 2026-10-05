@@ -268,3 +268,127 @@ print(mutate(fdr, across(where(is.numeric), ~ signif(.x, 3))))
 
 header("Session info")
 print(sessionInfo())
+
+
+# =====================================================================
+# 12. L2b subclade: composition and the discordant haplogroup call
+# =====================================================================
+# One sample, UGR0185, was discordant between the two haplogroup tools
+# (Haplogrep 3: L2b2a; MToolBox: L3i1). Its position in the cohort is
+# checked here, together with the composition of the L2b group.
+header("12. L2b subclade composition")
+
+cat("UGR0185 in the final dataset:\n")
+print(as.data.frame(filter(dat, sample_name == "UGR0185") %>%
+                      select(sample_name, Country, Phenotype, Sequencing,
+                             Haplogroup, Subclade)))
+cat("\nIn the Ugandan RP survival set:", "UGR0185" %in% ugr_rp$sample_name, "\n")
+
+l2_rp <- ugr_rp %>%
+  filter(L2 == "L2") %>%
+  mutate(L2b = factor(if_else(Subclade == "L2b", "L2b", "Non L2b"),
+                      levels = c("L2b", "Non L2b")),
+         Subclade = factor(Subclade))
+
+cat("\nL2 rapid progressors by subclade:\n")
+print(as.data.frame(l2_rp %>% group_by(Subclade) %>%
+                      summarise(n = n(), median_time = median(time),
+                                .groups = "drop")))
+
+# Worst case: drop one L2b participant and refit
+cat("\nL2b group with each participant removed in turn:\n")
+l2b_ids <- filter(l2_rp, L2b == "L2b")$sample_name
+loo <- lapply(l2b_ids, function(id) {
+  d <- filter(l2_rp, sample_name != id)
+  sd <- survdiff(Surv(time, event) ~ L2b, data = d)
+  m <- coxph(Surv(time, event) ~ Subclade + Sex, data = d)
+  s <- summary(m)
+  data.frame(removed = id, L2b_n = sum(d$L2b == "L2b"),
+             logrank_p = round(1 - pchisq(sd$chisq, 1), 3),
+             HR = round(s$conf.int["SubcladeL2b", "exp(coef)"], 3),
+             lower95 = round(s$conf.int["SubcladeL2b", "lower .95"], 3),
+             upper95 = round(s$conf.int["SubcladeL2b", "upper .95"], 3),
+             p = round(s$coefficients["SubcladeL2b", "Pr(>|z|)"], 3))
+})
+print(bind_rows(loo), row.names = FALSE)
+
+
+# =====================================================================
+# 13. Haplogroup screen and correction for selection
+# =====================================================================
+# Each haplogroup with at least 10 carriers is tested against all others
+# for association with progression phenotype. The tests are not
+# independent, so significance across the screen is assessed by
+# permutation of the phenotype labels.
+header("13. Haplogroup screen")
+
+min_carriers <- 10
+n_perm       <- 10000
+
+screen_one <- function(df, hap_col = "Haplogroup", min_n = min_carriers) {
+  haps <- names(which(table(df[[hap_col]]) >= min_n))
+  out <- lapply(haps, function(h) {
+    ft <- fisher.test(table(df[[hap_col]] == h, df$Phenotype))
+    data.frame(haplogroup = h,
+               n       = sum(df[[hap_col]] == h, na.rm = TRUE),
+               n_RP    = sum(df[[hap_col]] == h & df$Phenotype == "RP", na.rm = TRUE),
+               OR      = round(unname(ft$estimate), 3),
+               lower95 = round(ft$conf.int[1], 3),
+               upper95 = round(ft$conf.int[2], 3),
+               p_raw   = signif(ft$p.value, 3))
+  })
+  out <- do.call(rbind, out)
+  out <- out[order(out$p_raw), ]
+  out$p_BH <- signif(p.adjust(out$p_raw, "BH"), 3)
+  rownames(out) <- NULL
+  out
+}
+
+# Smallest p-value across the screen, for a given phenotype vector
+min_p <- function(df, phenotype, hap_col = "Haplogroup", min_n = min_carriers) {
+  haps <- names(which(table(df[[hap_col]]) >= min_n))
+  min(sapply(haps, function(h)
+    fisher.test(table(df[[hap_col]] == h, phenotype))$p.value))
+}
+
+for (cc in c("UGR", "BWR")) {
+  d <- filter(dat, Country == cc)
+  cat("\n--", cc, "--\n")
+  print(screen_one(d))
+}
+
+header("14. Permutation test for the Ugandan screen")
+
+set.seed(1)
+obs      <- min_p(ugr, ugr$Phenotype)
+null_min <- replicate(n_perm, min_p(ugr, sample(ugr$Phenotype)))
+
+cat("Smallest observed p across the screen:", signif(obs, 3), "\n")
+cat("Permutation-adjusted p:",
+    signif((1 + sum(null_min <= obs)) / (1 + n_perm), 3), "\n")
+cat("Permutations with at least one haplogroup at p < 0.05:",
+    sprintf("%.0f%%", 100 * mean(null_min < 0.05)), "\n")
+
+# Global test: does phenotype vary across haplogroups at all?
+keep <- names(which(table(ugr$Haplogroup) >= min_carriers))
+gtab <- table(filter(ugr, Haplogroup %in% keep)$Haplogroup,
+              filter(ugr, Haplogroup %in% keep)$Phenotype)
+cat("\nGlobal test across haplogroups (Uganda):\n")
+print(gtab)
+cat("Fisher, simulated p:",
+    signif(fisher.test(gtab, simulate.p.value = TRUE, B = 1e5)$p.value, 3), "\n")
+
+header("15. Sensitivity to the carrier threshold")
+# The threshold changes the number of tests and therefore the adjustment.
+# Reported so the choice is visible rather than implicit.
+set.seed(1)
+thr <- lapply(c(1, 5, 10, 20, 30), function(m) {
+  haps <- names(which(table(ugr$Haplogroup) >= m))
+  o    <- min_p(ugr, ugr$Phenotype, min_n = m)
+  nm   <- replicate(2000, min_p(ugr, sample(ugr$Phenotype), min_n = m))
+  data.frame(min_carriers = m, n_tests = length(haps),
+             p_raw = signif(o, 3),
+             p_BH  = signif(min(1, o * length(haps)), 3),
+             p_perm = signif((1 + sum(nm <= o)) / 2001, 3))
+})
+print(bind_rows(thr), row.names = FALSE)
