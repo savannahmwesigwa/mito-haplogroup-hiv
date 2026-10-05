@@ -392,3 +392,44 @@ thr <- lapply(c(1, 5, 10, 20, 30), function(m) {
              p_perm = signif((1 + sum(nm <= o)) / 2001, 3))
 })
 print(bind_rows(thr), row.names = FALSE)
+
+
+# =====================================================================
+# 16. Population structure and influential observations
+# =====================================================================
+# Tribal affiliation is the only marker of population structure in the
+# dataset. One Ugandan rapid progressor has a markedly longer time than
+# the rest and is checked for influence on the primary estimate.
+header("16. Tribe and influential observations")
+
+l2_hr <- function(fit, label) {
+  s <- summary(fit)
+  cat(sprintf("%-34s n=%3d  HR=%.3f (%.3f-%.3f)  p=%.3f\n", label, fit$n,
+              s$conf.int["L2L2", "exp(coef)"], s$conf.int["L2L2", "lower .95"],
+              s$conf.int["L2L2", "upper .95"], s$coefficients["L2L2", "Pr(>|z|)"]))
+}
+
+rp_tribe <- ugr_rp %>%
+  mutate(Tribe_grp = factor(if_else(Tribe == "BAGANDA", "Baganda", "Other"),
+                            levels = c("Other", "Baganda")))
+
+cat("Tribal affiliation among Ugandan RPs:\n")
+print(table(Tribe = rp_tribe$Tribe_grp, L2 = rp_tribe$L2))
+cat("Fisher, L2 vs tribe: p =",
+    signif(fisher.test(table(rp_tribe$Tribe_grp, rp_tribe$L2))$p.value, 3), "\n\n")
+
+l2_hr(coxph(Surv(time, event) ~ L2 + Sex, data = rp_tribe), "L2 + sex")
+l2_hr(coxph(Surv(time, event) ~ L2 + Sex + Tribe_grp, data = rp_tribe),
+      "L2 + sex + tribe")
+l2_hr(coxph(Surv(time, event) ~ L2 + Sex, data = filter(rp_tribe, Tribe_grp == "Baganda")),
+      "Baganda only")
+
+cat("\nUgandan RPs with time > 36 months:\n")
+print(as.data.frame(filter(ugr_rp, time > 36) %>%
+                      select(sample_name, Subclade, Sex, time)))
+cat("\n")
+l2_hr(coxph(Surv(time, event) ~ L2 + Sex, data = ugr_rp), "All Ugandan RPs")
+for (id in filter(ugr_rp, time > 36)$sample_name) {
+  l2_hr(coxph(Surv(time, event) ~ L2 + Sex, data = filter(ugr_rp, sample_name != id)),
+        paste("Excluding", id))
+}

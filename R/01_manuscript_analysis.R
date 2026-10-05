@@ -92,7 +92,7 @@ fig1 <- ggplot(hap_counts, aes(fill = Haplogroup, values = Frequency)) +
 
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure1_haplogroup_distribution.", ext)),
-         fig1, width = fig1_w, height = fig1_h, units = "in", dpi = fig_dpi)
+         fig1, width = fig1_w, height = fig1_h, units = "in", dpi = fig_dpi, bg = "white")
 }
 
 
@@ -212,7 +212,7 @@ figS1 <- ggarrange(km_panel(km_S1A), km_panel(km_S1B),
                    font.label = list(size = 11))
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("SuppFigureS1_BWR_KM.", ext)), figS1,
-         width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi)
+         width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi, bg = "white")
 }
 
 
@@ -262,7 +262,7 @@ fig2 <- ggarrange(km_panel(km_2A), km_panel(km_2B),
 # 1950 x 1696 px at 330 dpi
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure2_KM_panels.", ext)), fig2,
-         width = fig2_w, height = fig2_h, units = "in", dpi = fig2_dpi)
+         width = fig2_w, height = fig2_h, units = "in", dpi = fig2_dpi, bg = "white")
 }
 
 
@@ -325,7 +325,7 @@ fig3_old <- ggplot(forest_df, aes(y = term, x = HR, xmin = lower95, xmax = upper
   theme_minimal()
 
 ggsave(file.path(output_dir, "Figure3_forest_as_submitted.png"),
-       fig3_old, width = 8.5, height = 3.54, dpi = 350)
+       fig3_old, width = 8.5, height = 3.54, dpi = 350, bg = "white")
 
 
 # =====================================================================
@@ -422,7 +422,7 @@ fig3_w <- 1300 / fig_dpi
 fig3_h <-  620 / fig_dpi
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure3_L2_by_birth_period.", ext)),
-         fig3, width = fig3_w, height = fig3_h, units = "in", dpi = fig_dpi)
+         fig3, width = fig3_w, height = fig3_h, units = "in", dpi = fig_dpi, bg = "white")
 }
 
 
@@ -438,7 +438,7 @@ figS2 <- ggarrange(km_panel(km_pre06), km_panel(km_0610),
                    font.label = list(size = 11))
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("SuppFigureS2_RP_by_birth_period_KM.", ext)),
-         figS2, width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi)
+         figS2, width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi, bg = "white")
 }
 
 
@@ -539,7 +539,7 @@ fig4 <- ggplot() +
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure4_participant_flow.", ext)),
          fig4, width = 1950 / fig_dpi, height = 1300 / fig_dpi,
-         units = "in", dpi = fig_dpi)
+         units = "in", dpi = fig_dpi, bg = "white")
 }
 
 
@@ -611,7 +611,7 @@ fig5 <- ggplot() +
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure5_causal_diagram.", ext)),
          fig5, width = 1600 / fig_dpi, height = 1100 / fig_dpi,
-         units = "in", dpi = fig_dpi)
+         units = "in", dpi = fig_dpi, bg = "white")
 }
 
 
