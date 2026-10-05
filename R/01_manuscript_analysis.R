@@ -567,17 +567,21 @@ nodes <- data.frame(
 )
 pos <- function(n, what) nodes[[what]][nodes$name == n]
 
+# Selection into the cohort is defined by progression phenotype, so the
+# outcome causes selection; this makes Select a collider on the path
+# L2 -> Select <- Outcome.
 edges <- data.frame(
-  from = c("L2", "Sex", "Birth", "Country", "Country", "Unmeas", "L2", "Birth"),
+  from = c("L2", "Sex", "Birth", "Country", "Country", "Unmeas",
+           "L2", "Birth", "Outcome"),
   to   = c("Outcome", "Outcome", "Outcome", "L2", "Outcome", "Outcome",
-           "Select", "Select"),
+           "Select", "Select", "Select"),
   stringsAsFactors = FALSE
 ) |>
   mutate(x = sapply(from, pos, "x"), y = sapply(from, pos, "y"),
          xend = sapply(to, pos, "x"), yend = sapply(to, pos, "y"))
 
 # shorten each arrow so it stops short of the node labels
-shrink <- function(d, f = 0.72) {
+shrink <- function(d, f = 0.66) {
   dx <- d$xend - d$x; dy <- d$yend - d$y
   d$x <- d$x + dx * (1 - f) / 2; d$y <- d$y + dy * (1 - f) / 2
   d$xend <- d$xend - dx * (1 - f) / 2; d$yend <- d$yend - dy * (1 - f) / 2
