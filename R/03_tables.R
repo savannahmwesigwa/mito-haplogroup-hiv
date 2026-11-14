@@ -238,7 +238,7 @@ supp$S5 <- list(
 # S6: Ugandan RPs by birth period, following ART eligibility guideline changes
 rp_era <- ugr_rp |>
   mutate(Era = cut(Birth_year, breaks = c(-Inf, 2005, 2010, Inf),
-                   labels = c("pre-2006", "2006-2010", "post-2010")))
+                   labels = c("pre-2006", "2006-2010", "2011-2012")))
 s6 <- rp_era |>
   count(Era, L2) |>
   tidyr::pivot_wider(names_from = L2, values_from = n, values_fill = 0) |>
@@ -251,7 +251,7 @@ supp$S6 <- list(
   data = s6,
   caption = paste0("Supplementary Table 6. Ugandan rapid progressors by birth period and L2 ",
                    "haplogroup status (N = ", nrow(ugr_rp), ")."),
-  foot = "Birth periods follow national and WHO ART eligibility guideline changes.",
+  foot = "Birth periods follow successive revisions of WHO paediatric antiretroviral therapy guidance.",
   labels = NULL
 )
 
@@ -281,8 +281,8 @@ s7 <- bind_rows(
           "Within pre-2006"),
   cox_row(coxph(Surv(time, event) ~ L2 + Sex, data = filter(rp_era, Era == "2006-2010")),
           "Within 2006-2010"),
-  cox_row(coxph(Surv(time, event) ~ L2 + Sex, data = filter(rp_era, Era == "post-2010")),
-          "Within post-2010")
+  cox_row(coxph(Surv(time, event) ~ L2 + Sex, data = filter(rp_era, Era == "2011-2012")),
+          "Within 2011-2012")
 )
 supp$S7 <- list(
   data = s7,
@@ -357,8 +357,8 @@ supp$S9 <- list(
   caption = paste0("Supplementary Table 9. Leave-one-out analysis of the L2b ",
                    "subclade association among Ugandan rapid progressors."),
   foot = paste0("Cox models adjusted for sex, reference L2a. Participant ",
-                "identifiers are not shown. The association is not robust to the ",
-                "removal of any single individual."),
+                "identifiers are not shown. The association lost significance ",
+                "in four of six refits."),
   labels = NULL
 )
 

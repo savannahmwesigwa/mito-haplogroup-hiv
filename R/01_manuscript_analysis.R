@@ -217,7 +217,7 @@ for (ext in c("pdf", "tiff")) {
 
 
 # =====================================================================
-# 6. L2 subclades (Figure 2C-D)
+# 6. L2 subclades (Supplementary Figure S4; Figure 2C-D before revision 2)
 # =====================================================================
 header("6. L2 subclades")
 
@@ -248,21 +248,29 @@ add_check("Cox subclade L2c", "0.646, p = 0.559", hr_text(cox_sub, "SubcladeL2c"
 add_check("Cox subclade L2d", "1.854 (0.231-14.890), p = 0.562", hr_text(cox_sub, "SubcladeL2d"))
 add_check("Cox subclade male", "2.163, p = 0.045", hr_text(cox_sub, "SexM"))
 
-# Panels C and D of Figure 2; different palette from A-B to mark the subclade analysis
-km_2C <- make_km(l2_rp,   "L2b", c("L2b", "Non L2b"), "Time to progression (months)",
-                 "Figure2C_L2b_RP_KM.pdf", palette = c("#F8766D", "#00BFC4"), break_by = 10)
-km_2D <- make_km(l2_ltnp, "L2b", c("L2b", "Non L2b"), "Time to progression (months)",
-                 "Figure2D_L2b_LTNP_KM.pdf", palette = c("#F8766D", "#00BFC4"), break_by = 30)
+# Supplementary Figure S4 (L2b subclade, six L2b RPs); moved out of Figure 2
+# at revision 2. Different palette from Figure 2 to mark the subclade analysis
+km_S4A <- make_km(l2_rp,   "L2b", c("L2b", "Non L2b"), "Time to progression (months)",
+                  "SuppS4A_L2b_RP_KM.pdf", palette = c("#F8766D", "#00BFC4"), break_by = 10)
+km_S4B <- make_km(l2_ltnp, "L2b", c("L2b", "Non L2b"), "Time to progression (months)",
+                  "SuppS4B_L2b_LTNP_KM.pdf", palette = c("#F8766D", "#00BFC4"), break_by = 30)
 
-# Figure 2: four panels, labelled A-D
+figS4 <- ggarrange(km_panel(km_S4A), km_panel(km_S4B),
+                   ncol = 2, nrow = 1, labels = c("A", "B"),
+                   font.label = list(size = 11))
+for (ext in c("pdf", "tiff")) {
+  ggsave(file.path(output_dir, paste0("SuppFigureS4_L2b_KM.", ext)), figS4,
+         width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi, bg = "white")
+}
+
+# Figure 2: panels A (Uganda RP) and B (Uganda LTNP)
 fig2 <- ggarrange(km_panel(km_2A), km_panel(km_2B),
-                  km_panel(km_2C), km_panel(km_2D),
-                  ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
+                  ncol = 2, nrow = 1, labels = c("A", "B"),
                   font.label = list(size = 11))
-# 1950 x 1696 px at 330 dpi
+# 1950 x 848 px at 330 dpi
 for (ext in c("pdf", "tiff")) {
   ggsave(file.path(output_dir, paste0("Figure2_KM_panels.", ext)), fig2,
-         width = fig2_w, height = fig2_h, units = "in", dpi = fig2_dpi, bg = "white")
+         width = fig2_w, height = fig2_h / 2, units = "in", dpi = fig2_dpi, bg = "white")
 }
 
 
@@ -448,8 +456,7 @@ for (ext in c("pdf", "tiff")) {
 # Two analysis streams:
 #   all participants -> haplogroup vs phenotype association
 #   participants with time-to-event data -> survival analyses
-# Eligible counts at the two centres come from the parent CAfGEN study;
-# all later counts are computed from the data.
+# All counts are computed from the data.
 header("7c. Participant flow")
 
 n_hap  <- nrow(dat)
@@ -473,8 +480,8 @@ box <- function(x, y, label) data.frame(x = x, y = y, label = label,
 
 main <- bind_rows(
   box(1.5, 5, paste0(
-    "Eligible at the two clinical centres (parent CAfGEN study)\n",
-    "Uganda: 440 LTNPs, 275 RPs      Botswana: 126 LTNPs, 500 RPs")),
+    "Children in care at the Uganda and Botswana clinical centres\n",
+    "(parent CAfGEN study)")),
   box(1.5, 4, paste0(
     "Recruited, sequenced and assigned a mitochondrial haplogroup\n",
     "N = ", n_hap, "   (WES ", n_wes, ", WGS ", n_wgs, ")"))
@@ -501,7 +508,7 @@ right <- bind_rows(
     "Uganda: ", nrow(ugr_rp), " RPs, ", nrow(ugr_ltnp), " LTNPs\n",
     "Botswana: ", nrow(bwr_rp), " RPs, ", nrow(bwr_ltnp), " LTNPs")),
   box(2.28, 1, paste0(
-    "L2 subclade analysis, Ugandan RPs with L2\n",
+    "L2 subclade analysis (Supplementary), Ugandan RPs with L2\n",
     "N = ", n_l2_rp, "   (L2a ", sub_n[["L2a"]], ", L2b ", sub_n[["L2b"]],
     ", L2c ", sub_n[["L2c"]], ", L2d ", sub_n[["L2d"]], ")"))
 )

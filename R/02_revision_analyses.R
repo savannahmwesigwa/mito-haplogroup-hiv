@@ -433,3 +433,45 @@ for (id in filter(ugr_rp, time > 36)$sample_name) {
   l2_hr(coxph(Surv(time, event) ~ L2 + Sex, data = filter(ugr_rp, sample_name != id)),
         paste("Excluding", id))
 }
+
+
+# =====================================================================
+# 17. E-value for the primary hazard ratio (unmeasured confounding)
+# =====================================================================
+# VanderWeele & Ding, Ann Intern Med 2017;167:268-274.
+# The E-value is the minimum strength of association, on the risk ratio
+# scale, that an unmeasured confounder would need with both L2 carriage and
+# time to therapy initiation, conditional on sex, to explain away the
+# observed association.
+# All Ugandan RPs reached the endpoint, so the outcome is common and the
+# rare-outcome approximation RR ~ HR does not hold. The HR is converted to
+# an approximate RR first (VanderWeele, Biometrics 2020;76:746-752):
+#   RR = (1 - 0.5^sqrt(HR)) / (1 - 0.5^sqrt(1/HR))
+header("17. E-value, primary Cox model")
+
+fit_primary <- coxph(Surv(time, event) ~ L2 + Sex, data = ugr_rp)
+ci <- summary(fit_primary)$conf.int["L2L2", c("exp(coef)", "lower .95", "upper .95")]
+cat("Events / participants:", fit_primary$nevent, "/", fit_primary$n, "\n")
+cat("L2 HR:", sprintf("%.3f (%.3f-%.3f)", ci[1], ci[2], ci[3]), "\n")
+
+hr_to_rr <- function(hr) (1 - 0.5^sqrt(hr)) / (1 - 0.5^sqrt(1 / hr))
+evalue_rr <- function(rr) {
+  rr <- ifelse(rr < 1, 1 / rr, rr)    # protective estimates are inverted
+  rr + sqrt(rr * (rr - 1))
+}
+
+rr <- hr_to_rr(ci)
+# Confidence limit closest to the null; E-value is 1 if the CI includes 1
+rr_limit <- if (ci[3] < 1) rr[3] else if (ci[2] > 1) rr[2] else NA
+
+cat("Approximate RR:", sprintf("%.3f (%.3f-%.3f)", rr[1], rr[2], rr[3]), "\n")
+cat("E-value, point estimate:", sprintf("%.2f", evalue_rr(rr[1])), "\n")
+cat("E-value, confidence limit:",
+    if (is.na(rr_limit)) "1 (CI includes 1)" else sprintf("%.2f", evalue_rr(rr_limit)),
+    "\n")
+
+# Cross-check against the EValue package, if installed
+if (requireNamespace("EValue", quietly = TRUE)) {
+  cat("\nEValue package check:\n")
+  print(EValue::evalues.HR(est = ci[1], lo = ci[2], hi = ci[3], rare = FALSE))
+}
