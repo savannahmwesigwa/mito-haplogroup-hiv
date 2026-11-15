@@ -57,8 +57,8 @@ for (grp in list(list(d = ugr_ltnp, lab = "Uganda LTNP"),
                  list(d = bwr_ltnp, lab = "Botswana LTNP"),
                  list(d = ugr_rp,   lab = "Uganda RP"))) {
   base <- grp$d
-  # (a) as submitted: incomplete records dropped
-  a <- sens(filter(base, event == 1), "Records dropped (as submitted)")
+  # (a) incomplete records excluded
+  a <- sens(filter(base, event == 1), "Incomplete records excluded")
   # (b) primary: four LTNPs censored
   b <- sens(base, "Four LTNPs censored (primary)")
   # (c) also treat BWR0375 as an event at its recorded ART start

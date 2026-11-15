@@ -307,11 +307,11 @@ sens_row <- function(df, lab, hand) {
              check.names = FALSE)
 }
 s8 <- bind_rows(
-  sens_row(filter(ugr_ltnp, event == 1), "Uganda LTNP", "Records dropped (as submitted)"),
+  sens_row(filter(ugr_ltnp, event == 1), "Uganda LTNP", "Incomplete records excluded"),
   sens_row(ugr_ltnp, "Uganda LTNP", "Four LTNPs censored (primary)"),
-  sens_row(filter(bwr_ltnp, event == 1), "Botswana LTNP", "Records dropped (as submitted)"),
+  sens_row(filter(bwr_ltnp, event == 1), "Botswana LTNP", "Incomplete records excluded"),
   sens_row(bwr_ltnp, "Botswana LTNP", "Four LTNPs censored (primary)"),
-  sens_row(ugr_rp, "Uganda RP", "Records dropped (as submitted)"),
+  sens_row(ugr_rp, "Uganda RP", "Incomplete records excluded"),
   sens_row(ugr_rp, "Uganda RP", "Four LTNPs censored (primary)")
 )
 supp$S8 <- list(
